@@ -54,8 +54,8 @@ func TestConErrFunc_Err(t *testing.T) {
 		allConFuncDone = true
 		return nil
 	})
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Fatal(fmt.Errorf("expected error, but got nil"))
 	}
 	fmt.Printf("allConFuncDone: %t", allConFuncDone)
 }
@@ -80,8 +80,8 @@ func TestConErrFunc_AggregateErr(t *testing.T) {
 		fmt.Println("error is occurred when aggregating")
 		return fmt.Errorf("aggregate error")
 	})
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Fatal(fmt.Errorf("expected error, but got nil"))
 	}
 	fmt.Printf("allConFuncDone: %t", allConFuncDone)
 }
