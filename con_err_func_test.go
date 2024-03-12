@@ -7,6 +7,30 @@ import (
 	"time"
 )
 
+func TestConErrFunc_Nil(t *testing.T) {
+	cf := ConcurrentErrFunc()
+	allConFuncDone := false
+	cf.Add(func() error {
+		time.Sleep(2 * time.Second)
+		fmt.Println("hello")
+		return nil
+	})
+	cf.Add(func() error {
+		time.Sleep(1 * time.Second)
+		fmt.Println("world")
+		return nil
+	})
+	err := cf.Aggregate(context.Background(), func() error {
+		fmt.Println("all done")
+		allConFuncDone = true
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("allConFuncDone: %t", allConFuncDone)
+}
+
 func TestConErrFunc_NoErr(t *testing.T) {
 	allConFuncDone := false
 	cf := ConcurrentErrFunc(func() error {
