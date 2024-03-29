@@ -28,5 +28,8 @@ func (cf *conFunc) Aggregate(rf func()) {
 		}(f)
 	}
 	cf.wg.Wait()
+	if rf == nil {
+		return
+	}
 	rf()
 }

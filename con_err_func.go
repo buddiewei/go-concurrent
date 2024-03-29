@@ -27,5 +27,8 @@ func (cf *conErrFunc) Aggregate(ctx context.Context, rf func() error) error {
 	if err := g.Wait(); err != nil {
 		return err
 	}
+	if rf == nil {
+		return nil
+	}
 	return rf()
 }
