@@ -81,3 +81,85 @@ func main() {
 	fmt.Printf("allConFuncDone: %t", allConFuncDone)
 }
 ```
+
+demo with concurrent limit and ignore error
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+	
+	con "github.com/buddiewei/go-concurrent"
+)
+
+func main() {
+	allConFuncDone := false
+	cf := con.ConcurrentFunc(func() {
+		time.Sleep(2 * time.Second)
+		fmt.Println("hello")
+	}, func() {
+		time.Sleep(3 * time.Second)
+		fmt.Println("world")
+	})
+	cf.Add(func() {
+		time.Sleep(1 * time.Second)
+		fmt.Println("hello world")
+	})
+	cf.Add(func() {
+		time.Sleep(2 * time.Second)
+		fmt.Println("foo")
+	})
+	cf.AggregateWithLimit(func() {
+		fmt.Println("all done")
+		allConFuncDone = true
+	}, 3)
+	fmt.Printf("allConFuncDone: %t", allConFuncDone)
+}
+```
+
+demo with concurrent limit and sensitive to error
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+	
+	con "github.com/buddiewei/go-concurrent"
+)
+
+func main() {
+	allConFuncDone := false
+	cf := con.ConcurrentErrFunc(func() error {
+		time.Sleep(2 * time.Second)
+		fmt.Println("hello")
+		return nil
+	}, func() error {
+		time.Sleep(3 * time.Second)
+		return fmt.Errorf("sleep 3s error")
+	})
+	cf.Add(func() error {
+		time.Sleep(1 * time.Second)
+		fmt.Println("hello world")
+		return nil
+	})
+	cf.Add(func() error {
+		time.Sleep(2 * time.Second)
+		fmt.Println("foo")
+		return nil
+	})
+	err := cf.AggregateWithLimit(context.Background(), func() error {
+		fmt.Println("all done")
+		allConFuncDone = true
+		return nil
+	}, 3)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("allConFuncDone: %t", allConFuncDone)
+}
+```
