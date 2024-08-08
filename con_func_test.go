@@ -40,6 +40,12 @@ func TestConFuncWithLimit(t *testing.T) {
 		fmt.Println("hello world")
 	})
 	cf.Add(func() {
+		time.Sleep(1 * time.Second)
+		fmt.Println("out range")
+		s := []string{"a", "b"}
+		fmt.Println(s[3])
+	})
+	cf.Add(func() {
 		time.Sleep(2 * time.Second)
 		fmt.Println("foo")
 	})

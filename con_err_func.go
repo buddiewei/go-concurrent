@@ -2,6 +2,7 @@ package go_concurrent
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -38,14 +39,22 @@ func (cf *conErrFunc) AggregateWithLimit(ctx context.Context, rf func() error, c
 		return cf.Aggregate(ctx, rf)
 	}
 	limiter := make(chan any, conLimit)
-	g, _ := errgroup.WithContext(ctx)
+	g, cancel := errgroup.WithContext(ctx)
 	for _, f := range cf.fs {
 		tf := f
-		g.Go(func() error {
-			limiter <- 1
-			err := tf()
-			<-limiter
-			return err
+		g.Go(func() (err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					err = fmt.Errorf("panic occurred: %v", r)
+				}
+			}()
+			select {
+			case limiter <- 1:
+			case <-cancel.Done():
+				return cancel.Err()
+			}
+			defer func() { <-limiter }()
+			return tf()
 		})
 	}
 	if err := g.Wait(); err != nil {

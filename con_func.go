@@ -1,6 +1,9 @@
 package go_concurrent
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type conFunc struct {
 	fs []func()
@@ -24,6 +27,11 @@ func (cf *conFunc) Aggregate(rf func()) {
 	for _, f := range cf.fs {
 		go func(f func()) {
 			defer cf.wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("panic occurred: %v\n", r)
+				}
+			}()
 			f()
 		}(f)
 	}
@@ -43,10 +51,17 @@ func (cf *conFunc) AggregateWithLimit(rf func(), conLimit int) {
 	cf.wg.Add(n)
 	for _, f := range cf.fs {
 		go func(f func()) {
-			limiter <- 1
 			defer cf.wg.Done()
-			f()
-			<-limiter
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("panic occurred: %v\n", r)
+				}
+			}()
+			select {
+			case limiter <- 1:
+				defer func() { <-limiter }()
+				f()
+			}
 		}(f)
 	}
 	cf.wg.Wait()
