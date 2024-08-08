@@ -45,6 +45,7 @@ func (cf *conFunc) Aggregate(rf func()) {
 func (cf *conFunc) AggregateWithLimit(rf func(), conLimit int) {
 	if conLimit <= 0 {
 		cf.Aggregate(rf)
+		return
 	}
 	limiter := make(chan any, conLimit)
 	n := len(cf.fs)
